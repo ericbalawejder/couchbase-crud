@@ -14,17 +14,18 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 @AutoConfigureWebTestClient
 public class HealthCheckIntegrationTest {
 
-    @Autowired
-    private WebTestClient webTestClient;
+  @Autowired
+  private WebTestClient webTestClient;
 
-    @Test
-    public void testHealthCheck()
-    {
-        this.webTestClient.get()
-                    .uri("/api/v1/health")
-                    .accept(MediaType.APPLICATION_JSON)
-                    .exchange()
-                    .expectStatus().isOk()
-                    .expectHeader().contentType(MediaType.APPLICATION_JSON);
-    }
+  @Test
+  public void testHealthCheck() {
+    this.webTestClient.get()
+        .uri("/api/v1/health")
+        .accept(MediaType.APPLICATION_JSON)
+        .exchange()
+        .expectStatus()
+        .isOk()
+        .expectHeader().contentType(MediaType.APPLICATION_JSON);
+  }
+
 }

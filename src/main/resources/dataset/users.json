@@ -7,7 +7,6 @@
     "password": "secret",
     "myCollectionName": "profile"
   },
-
   {
     "pid": "2",
     "firstName": "user2",
@@ -16,7 +15,6 @@
     "password": "secret",
     "myCollectionName": "profile"
   },
-
   {
     "pid": "3",
     "firstName": "user3",
@@ -25,7 +23,6 @@
     "password": "secret",
     "myCollectionName": "profile"
   },
-
   {
     "pid": "4",
     "firstName": "user4",
@@ -34,7 +31,6 @@
     "password": "secret",
     "myCollectionName": "profile"
   },
-
   {
     "pid": "5",
     "firstName": "user5",
@@ -43,7 +39,6 @@
     "password": "secret",
     "myCollectionName": "profile"
   },
-
   {
     "pid": "6",
     "firstName": "user6",
@@ -52,7 +47,6 @@
     "password": "secret",
     "myCollectionName": "profile"
   },
-
   {
     "pid": "7",
     "firstName": "user7",
@@ -61,7 +55,6 @@
     "password": "secret",
     "myCollectionName": "profile"
   },
-
   {
     "pid": "8",
     "firstName": "user8",
@@ -70,7 +63,6 @@
     "password": "secret",
     "myCollectionName": "profile"
   },
-
   {
     "pid": "9",
     "firstName": "user9",
@@ -79,7 +71,6 @@
     "password": "secret",
     "myCollectionName": "profile"
   },
-
   {
     "pid": "10",
     "firstName": "user10",
@@ -88,7 +79,6 @@
     "password": "secret",
     "myCollectionName": "profile"
   },
-
   {
     "pid": "10",
     "name": "Imported Product",
