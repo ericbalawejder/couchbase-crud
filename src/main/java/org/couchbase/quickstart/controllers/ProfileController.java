@@ -7,8 +7,11 @@ import java.util.List;
 import java.util.UUID;
 
 import org.couchbase.quickstart.configs.DBProperties;
+import org.couchbase.quickstart.exception.BalanceException;
+import org.couchbase.quickstart.exception.ProfileException;
 import org.couchbase.quickstart.models.Profile;
 import org.couchbase.quickstart.models.ProfileRequest;
+import org.couchbase.quickstart.response.ProfileResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -84,7 +87,7 @@ public class ProfileController {
           @ApiResponse(code = 500, message = "Error occurred in getting user profiles", response = Error.class)
       })
   public ResponseEntity<Profile> getProfile(@PathVariable("id") UUID id) {
-    Profile profile = profileCollection.get(id.toString()).contentAs(Profile.class);
+    final Profile profile = profileCollection.get(id.toString()).contentAs(Profile.class);
     return ResponseEntity.status(HttpStatus.OK).body(profile);
   }
 
@@ -114,14 +117,17 @@ public class ProfileController {
       @ApiResponse(code = 404, message = "Not Found", response = Error.class),
       @ApiResponse(code = 500, message = "Internal Server Error", response = Error.class)
   })
-  public ResponseEntity delete(@PathVariable UUID id) {
+  public ResponseEntity<ProfileResponse> delete(@PathVariable UUID id) {
     try {
       profileCollection.remove(id.toString());
-      return ResponseEntity.status(HttpStatus.OK).body(null);
+      return ResponseEntity.status(HttpStatus.OK)
+          .body(new ProfileResponse(200, "Deleted successfully", System.currentTimeMillis()));
     } catch (DocumentNotFoundException dnfe) {
-      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+      return ResponseEntity.status(HttpStatus.NOT_FOUND)
+          .body(new ProfileResponse(404, "Not found", System.currentTimeMillis()));
     } catch (Exception e) {
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .body(new ProfileResponse(500, "Server Error", System.currentTimeMillis()));
     }
   }
 
@@ -138,17 +144,17 @@ public class ProfileController {
       @RequestParam(required = false, defaultValue = "0") int skip,
       @RequestParam String search) {
 
-    String qryString = "SELECT p.* FROM `" + dbProperties.getBucketName() + "`.`_default`.`" + PROFILE + "` p " +
+    final String qryString = "SELECT p.* FROM `" + dbProperties.getBucketName() + "`.`_default`.`" + PROFILE + "` p " +
         "WHERE lower(p.firstName) LIKE '%" + search.toLowerCase()
         + "%' OR lower(p.lastName) LIKE '%" + search.toLowerCase() + "%'  LIMIT " + limit + " OFFSET " + skip;
     System.out.println("Query=" + qryString);
     //TBD with params: final List<Profile> profiles = cluster.query("SELECT p.* FROM `$bucketName`.`_default`
     // .`$collectionName` p WHERE lower(p.firstName) LIKE '$search' OR lower(p.lastName) LIKE '$search' LIMIT $limit
     // OFFSET $skip",
-    final List<Profile> profiles =
-        cluster.query(qryString,
-                QueryOptions.queryOptions().scanConsistency(QueryScanConsistency.REQUEST_PLUS))
-            .rowsAs(Profile.class);
+    final List<Profile> profiles = cluster
+        .query(qryString, QueryOptions.queryOptions().scanConsistency(QueryScanConsistency.REQUEST_PLUS))
+        .rowsAs(Profile.class);
+
     return ResponseEntity.status(HttpStatus.OK).body(profiles);
   }
 
@@ -160,30 +166,29 @@ public class ProfileController {
           @ApiResponse(code = 200, message = "Returns the list of changed user profiles"),
           @ApiResponse(code = 500, message = "Error occurred while transfer operation", response = Error.class)
       })
-  public ResponseEntity transferCredits(
+  public ResponseEntity<List<Profile>> transferCredits(
       @RequestParam(name = "source", required = true) String sourceProfileId,
       @RequestParam(name = "target", required = true) String targetProfileId,
       @RequestParam(name = "amount", required = true) Integer amount
   ) {
-    TransactionOptions to = TransactionOptions.transactionOptions();
-    TransactionQueryOptions args = TransactionQueryOptions.queryOptions().parameters(
+    final TransactionOptions to = TransactionOptions.transactionOptions();
+    final TransactionQueryOptions args = TransactionQueryOptions.queryOptions().parameters(
         JsonObject.create()
             .put("source", sourceProfileId)
             .put("amount", amount)
             .put("target", targetProfileId)
     );
-
     while (true) {
       try {
         cluster.transactions().run(ctx -> {
-          Profile sourceProfile = profileCollection.get(sourceProfileId).contentAs(Profile.class),
-              targetProfile = profileCollection.get(targetProfileId).contentAs(Profile.class);
+          final Profile sourceProfile = profileCollection.get(sourceProfileId).contentAs(Profile.class);
+          final Profile targetProfile = profileCollection.get(targetProfileId).contentAs(Profile.class);
 
           if (sourceProfile == null) {
-            throw new RuntimeException("Source profile not found");
+            throw new ProfileException("Source profile not found");
           }
           if (targetProfile == null) {
-            throw new RuntimeException("Target profile not found");
+            throw new ProfileException("Target profile not found");
           }
 
           ctx.query("UPDATE `" + dbProperties.getBucketName() + "`.`_default`.`" + PROFILE
@@ -192,10 +197,9 @@ public class ProfileController {
               + "` SET balance = balance + $amount WHERE pid = $target", args);
 
           if (sourceProfile.getBalance() < amount) {
-            throw new RuntimeException("Insufficient balance");
+            throw new BalanceException("Insufficient balance");
           }
         }, to);
-
         break;
       } catch (Exception e) {
         if (e.getMessage().contains("DurabilityImpossible")) {
@@ -206,9 +210,9 @@ public class ProfileController {
         }
       }
     }
+    final Profile sourceProfile = profileCollection.get(sourceProfileId).contentAs(Profile.class);
+    final Profile targetProfile = profileCollection.get(targetProfileId).contentAs(Profile.class);
 
-    Profile sourceProfile = profileCollection.get(sourceProfileId).contentAs(Profile.class),
-        targetProfile = profileCollection.get(targetProfileId).contentAs(Profile.class);
     return ResponseEntity.ok(Arrays.asList(sourceProfile, targetProfile));
   }
 
