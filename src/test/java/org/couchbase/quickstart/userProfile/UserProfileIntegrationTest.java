@@ -1,23 +1,27 @@
 package org.couchbase.quickstart.userProfile;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import org.couchbase.quickstart.configs.CollectionNames;
 import org.couchbase.quickstart.configs.DBProperties;
 import org.couchbase.quickstart.models.Profile;
 import org.couchbase.quickstart.models.ProfileRequest;
-import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
+import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -110,14 +114,14 @@ public class UserProfileIntegrationTest {
         .expectBodyList(Profile.class)
         .returnResult();
 
-    MatcherAssert.assertThat(profileListResult.getResponseBody(), Matchers.hasSize(1));
-    Profile result = profileListResult.getResponseBody().get(0);
+    assertThat(profileListResult.getResponseBody(), hasSize(1));
+    Profile result = Objects.requireNonNull(profileListResult.getResponseBody()).get(0);
     System.out.println(result);
     assertEquals(result.getFirstName(), testProfile.getFirstName());
     assertEquals(result.getLastName(), testProfile.getLastName());
     assertEquals(result.getEmail(), testProfile.getEmail());
     //TBD: encrypted password verify
-    //assertTrue(BCrypt.checkpw(testProfile.getPassword(),result.getPassword()));
+    //assertTrue(BCrypt.checkpw(testProfile.getPassword(), result.getPassword()));
     assertNotNull(result.getPid());
   }
 
@@ -138,7 +142,7 @@ public class UserProfileIntegrationTest {
         .expectBodyList(Profile.class)
         .returnResult();
 
-    MatcherAssert.assertThat(profileListResult.getResponseBody(), Matchers.hasSize(0));
+    assertThat(profileListResult.getResponseBody(), hasSize(0));
   }
 
   @Test
@@ -164,8 +168,8 @@ public class UserProfileIntegrationTest {
 
   @Test
   public void testTransferCredits() {
-    Profile sourceProfile = getTestProfile(),
-        targetProfile = getTestProfile();
+    Profile sourceProfile = getTestProfile();
+    Profile targetProfile = getTestProfile();
 
     bucket.collection(CollectionNames.PROFILE).insert(sourceProfile.getPid(), sourceProfile);
     bucket.collection(CollectionNames.PROFILE).insert(targetProfile.getPid(), targetProfile);
@@ -176,7 +180,7 @@ public class UserProfileIntegrationTest {
 
     // attempt to transfer credits again -- should fail
     callTransferCredits(sourceProfile, targetProfile, 100)
-        .expectStatus().is5xxServerError();
+        .expectStatus().is4xxClientError();
 
     sourceProfile = bucket.collection(CollectionNames.PROFILE).get(sourceProfile.getPid()).contentAs(Profile.class);
     targetProfile = bucket.collection(CollectionNames.PROFILE).get(targetProfile.getPid()).contentAs(Profile.class);
