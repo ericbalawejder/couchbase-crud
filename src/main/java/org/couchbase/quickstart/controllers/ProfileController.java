@@ -43,7 +43,7 @@ import io.swagger.annotations.ApiResponses;
 public class ProfileController {
 
   private final Cluster cluster;
-  private final Collection profileCol;
+  private final Collection profileCollection;
   private final DBProperties dbProperties;
   private final Bucket bucket;
 
@@ -51,7 +51,7 @@ public class ProfileController {
     System.out.println("Initializing profile controller, cluster: " + cluster + "; bucket: " + bucket);
     this.cluster = cluster;
     this.bucket = bucket;
-    this.profileCol = bucket.collection(PROFILE);
+    this.profileCollection = bucket.collection(PROFILE);
     this.dbProperties = dbProperties;
   }
 
@@ -64,11 +64,11 @@ public class ProfileController {
       @ApiResponse(code = 500, message = "Internal Server Error", response = Error.class)
   })
   public ResponseEntity<Profile> save(@RequestBody final ProfileRequest userProfile) {
-    //generates an id and save the user
-    Profile profile = userProfile.getProfile();
+    // Generates an id, hash password and save the user
+    final Profile profile = userProfile.getProfile();
 
     try {
-      profileCol.insert(profile.getPid(), profile);
+      profileCollection.insert(profile.getPid(), profile);
       return ResponseEntity.status(HttpStatus.CREATED).body(profile);
     } catch (Exception e) {
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
@@ -84,7 +84,7 @@ public class ProfileController {
           @ApiResponse(code = 500, message = "Error occurred in getting user profiles", response = Error.class)
       })
   public ResponseEntity<Profile> getProfile(@PathVariable("id") UUID id) {
-    Profile profile = profileCol.get(id.toString()).contentAs(Profile.class);
+    Profile profile = profileCollection.get(id.toString()).contentAs(Profile.class);
     return ResponseEntity.status(HttpStatus.OK).body(profile);
   }
 
@@ -97,7 +97,7 @@ public class ProfileController {
   })
   public ResponseEntity<Profile> update(@PathVariable("id") UUID id, @RequestBody Profile profile) {
     try {
-      profileCol.upsert(id.toString(), profile);
+      profileCollection.upsert(id.toString(), profile);
       return ResponseEntity.status(HttpStatus.CREATED).body(profile);
     } catch (DocumentNotFoundException dnfe) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
@@ -116,7 +116,7 @@ public class ProfileController {
   })
   public ResponseEntity delete(@PathVariable UUID id) {
     try {
-      profileCol.remove(id.toString());
+      profileCollection.remove(id.toString());
       return ResponseEntity.status(HttpStatus.OK).body(null);
     } catch (DocumentNotFoundException dnfe) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
@@ -176,8 +176,8 @@ public class ProfileController {
     while (true) {
       try {
         cluster.transactions().run(ctx -> {
-          Profile sourceProfile = profileCol.get(sourceProfileId).contentAs(Profile.class),
-              targetProfile = profileCol.get(targetProfileId).contentAs(Profile.class);
+          Profile sourceProfile = profileCollection.get(sourceProfileId).contentAs(Profile.class),
+              targetProfile = profileCollection.get(targetProfileId).contentAs(Profile.class);
 
           if (sourceProfile == null) {
             throw new RuntimeException("Source profile not found");
@@ -207,8 +207,8 @@ public class ProfileController {
       }
     }
 
-    Profile sourceProfile = profileCol.get(sourceProfileId).contentAs(Profile.class),
-        targetProfile = profileCol.get(targetProfileId).contentAs(Profile.class);
+    Profile sourceProfile = profileCollection.get(sourceProfileId).contentAs(Profile.class),
+        targetProfile = profileCollection.get(targetProfileId).contentAs(Profile.class);
     return ResponseEntity.ok(Arrays.asList(sourceProfile, targetProfile));
   }
 

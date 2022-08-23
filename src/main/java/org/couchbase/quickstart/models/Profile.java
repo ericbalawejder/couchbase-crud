@@ -1,7 +1,5 @@
 package org.couchbase.quickstart.models;
 
-import org.mindrot.jbcrypt.BCrypt;
-
 public class Profile {
 
   private String pid;
@@ -48,7 +46,7 @@ public class Profile {
   }
 
   public void setPassword(String password) {
-    this.password = BCrypt.hashpw(password, BCrypt.gensalt());
+    this.password = password;
   }
 
   public Integer getBalance() {

@@ -2,9 +2,14 @@ package org.couchbase.quickstart.models;
 
 import java.util.UUID;
 
+import org.mindrot.jbcrypt.BCrypt;
+
 public class ProfileRequest {
 
-  private String firstName, lastName, email, password;
+  private String firstName;
+  private String lastName;
+  private String email;
+  private String password;
   private Integer balance;
 
   public String getFirstName() {
@@ -59,7 +64,8 @@ public class ProfileRequest {
   }
 
   public Profile getProfile() {
-    return new Profile(UUID.randomUUID().toString(), firstName, lastName, email, password, balance);
+    return new Profile(UUID.randomUUID().toString(), firstName, lastName, email,
+        BCrypt.hashpw(password, BCrypt.gensalt()), balance);
   }
 
 }
