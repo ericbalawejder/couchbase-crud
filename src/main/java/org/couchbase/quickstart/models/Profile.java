@@ -9,6 +9,27 @@ public class Profile {
   private String password;
   private Integer balance;
 
+  public Profile() {
+  }
+
+  public Profile(String pid, String firstName, String lastName, String email, String password, Integer balance) {
+    this.pid = pid;
+    this.firstName = firstName;
+    this.lastName = lastName;
+    this.email = email;
+    this.password = password;
+    this.balance = balance;
+  }
+
+  public Profile(Profile profile) {
+    this.pid = profile.getPid();
+    this.firstName = profile.getFirstName();
+    this.lastName = profile.getLastName();
+    this.email = profile.getEmail();
+    this.password = profile.getPassword();
+    this.balance = profile.getBalance();
+  }
+
   public String getPid() {
     return pid;
   }
@@ -57,27 +78,47 @@ public class Profile {
     this.balance = balance;
   }
 
-  public Profile() {
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+
+    Profile profile = (Profile) o;
+
+    if (!pid.equals(profile.pid)) {
+      return false;
+    }
+    if (!firstName.equals(profile.firstName)) {
+      return false;
+    }
+    if (!lastName.equals(profile.lastName)) {
+      return false;
+    }
+    if (!email.equals(profile.email)) {
+      return false;
+    }
+    if (!password.equals(profile.password)) {
+      return false;
+    }
+    return balance.equals(profile.balance);
   }
 
-  public Profile(String pid, String firstName, String lastName, String email, String password, Integer balance) {
-    this.pid = pid;
-    this.firstName = firstName;
-    this.lastName = lastName;
-    this.email = email;
-    this.password = password;
-    this.balance = balance;
+  @Override
+  public int hashCode() {
+    int result = pid.hashCode();
+    result = 31 * result + firstName.hashCode();
+    result = 31 * result + lastName.hashCode();
+    result = 31 * result + email.hashCode();
+    result = 31 * result + password.hashCode();
+    result = 31 * result + balance.hashCode();
+    return result;
   }
 
-  public Profile(Profile profile) {
-    this.pid = profile.getPid();
-    this.firstName = profile.getFirstName();
-    this.lastName = profile.getLastName();
-    this.email = profile.getEmail();
-    this.password = profile.getPassword();
-    this.balance = profile.getBalance();
-  }
-
+  @Override
   public String toString() {
     return "Profile: { pid=" + this.pid + ",firstName=" + this.firstName + ",lastName=" + this.lastName + ",email="
         + this.email + ",password=" + this.password + ",balance=" + this.balance + " }";

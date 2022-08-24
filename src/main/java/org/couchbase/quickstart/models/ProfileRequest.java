@@ -12,6 +12,27 @@ public class ProfileRequest {
   private String password;
   private Integer balance;
 
+  public ProfileRequest() {
+  }
+
+  public ProfileRequest(String firstName, String lastName, String email, String password, Integer balance) {
+    this.firstName = firstName;
+    this.lastName = lastName;
+    this.email = email;
+    this.password = password;
+    this.balance = balance;
+  }
+
+  public Profile getProfile() {
+    return new Profile(
+        UUID.randomUUID().toString(),
+        firstName,
+        lastName,
+        email,
+        BCrypt.hashpw(password, BCrypt.gensalt()),
+        balance);
+  }
+
   public String getFirstName() {
     return firstName;
   }
@@ -50,22 +71,6 @@ public class ProfileRequest {
 
   public void setBalance(Integer balance) {
     this.balance = balance;
-  }
-
-  public ProfileRequest() {
-  }
-
-  public ProfileRequest(String firstName, String lastName, String email, String password, Integer balance) {
-    this.firstName = firstName;
-    this.lastName = lastName;
-    this.email = email;
-    this.password = password;
-    this.balance = balance;
-  }
-
-  public Profile getProfile() {
-    return new Profile(UUID.randomUUID().toString(), firstName, lastName, email,
-        BCrypt.hashpw(password, BCrypt.gensalt()), balance);
   }
 
 }
