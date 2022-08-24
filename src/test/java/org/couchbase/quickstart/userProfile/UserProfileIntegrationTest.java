@@ -9,13 +9,11 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 
 import org.couchbase.quickstart.configs.CollectionNames;
 import org.couchbase.quickstart.configs.DBProperties;
 import org.couchbase.quickstart.models.Profile;
 import org.couchbase.quickstart.models.ProfileRequest;
-import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
@@ -88,7 +86,7 @@ public class UserProfileIntegrationTest {
         .returnResult();
 
     Profile result = bucket.collection(CollectionNames.PROFILE)
-        .get(profileResult.getResponseBody().getPid())
+        .get(Objects.requireNonNull(profileResult.getResponseBody()).getPid())
         .contentAs(Profile.class);
 
     assertEquals(result.getFirstName(), createTestProfile.getFirstName());
@@ -101,10 +99,12 @@ public class UserProfileIntegrationTest {
   @Test
   public void testListUsersSuccess() {
     //test data
-    Profile testProfile = getTestProfile();
+    final ProfileRequest testRequestProfile = getCreateTestProfile();
+    final Profile testProfile = testRequestProfile.getProfile();
+
     bucket.collection(CollectionNames.PROFILE).insert(testProfile.getPid(), testProfile);
 
-    EntityExchangeResult<List<Profile>> profileListResult = this.webTestClient.get()
+    final EntityExchangeResult<List<Profile>> profileListResult = this.webTestClient.get()
         .uri("/api/v1/profile/profiles/?limit=5&skip=0&search=Jam")
         .accept(MediaType.APPLICATION_JSON)
         .exchange()
@@ -115,13 +115,15 @@ public class UserProfileIntegrationTest {
         .returnResult();
 
     assertThat(profileListResult.getResponseBody(), hasSize(1));
-    Profile result = Objects.requireNonNull(profileListResult.getResponseBody()).get(0);
+
+    final Profile result = Objects.requireNonNull(profileListResult.getResponseBody()).get(0);
     System.out.println(result);
+
     assertEquals(result.getFirstName(), testProfile.getFirstName());
     assertEquals(result.getLastName(), testProfile.getLastName());
     assertEquals(result.getEmail(), testProfile.getEmail());
-    //TBD: encrypted password verify
-    //assertTrue(BCrypt.checkpw(testProfile.getPassword(), result.getPassword()));
+    assertTrue(BCrypt.checkpw(testRequestProfile.getPassword(), testProfile.getPassword()));
+    assertEquals(testProfile.getPassword(), result.getPassword());
     assertNotNull(result.getPid());
   }
 
@@ -226,13 +228,14 @@ public class UserProfileIntegrationTest {
   }
 
   private Profile getTestProfile() {
-    return new Profile(
-        UUID.randomUUID().toString(),
+    final ProfileRequest profileRequest = new ProfileRequest(
         "James",
         "Gosling",
         "james.gosling@sun.com",
         "password",
         100);
+
+    return profileRequest.getProfile();
   }
 
 }
