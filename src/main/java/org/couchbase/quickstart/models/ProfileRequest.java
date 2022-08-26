@@ -24,13 +24,15 @@ public class ProfileRequest {
   }
 
   public Profile getProfile() {
+    final String salt = BCrypt.gensalt();
     return new Profile(
         UUID.randomUUID().toString(),
-        firstName,
-        lastName,
-        email,
-        BCrypt.hashpw(password, BCrypt.gensalt()),
-        balance);
+        this.firstName,
+        this.lastName,
+        this.email,
+        BCrypt.hashpw(password, salt),
+        salt,
+        this.balance);
   }
 
   public String getFirstName() {

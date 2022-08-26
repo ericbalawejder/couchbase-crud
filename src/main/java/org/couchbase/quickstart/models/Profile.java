@@ -1,5 +1,8 @@
 package org.couchbase.quickstart.models;
 
+import java.util.Objects;
+import java.util.StringJoiner;
+
 public class Profile {
 
   private String pid;
@@ -7,17 +10,20 @@ public class Profile {
   private String lastName;
   private String email;
   private String password;
+  private String salt;
   private Integer balance;
 
   public Profile() {
   }
 
-  public Profile(String pid, String firstName, String lastName, String email, String password, Integer balance) {
+  public Profile(
+      String pid, String firstName, String lastName, String email, String password, String salt, Integer balance) {
     this.pid = pid;
     this.firstName = firstName;
     this.lastName = lastName;
     this.email = email;
     this.password = password;
+    this.salt = salt;
     this.balance = balance;
   }
 
@@ -27,6 +33,7 @@ public class Profile {
     this.lastName = profile.getLastName();
     this.email = profile.getEmail();
     this.password = profile.getPassword();
+    this.salt = profile.getSalt();
     this.balance = profile.getBalance();
   }
 
@@ -78,6 +85,14 @@ public class Profile {
     this.balance = balance;
   }
 
+  public String getSalt() {
+    return salt;
+  }
+
+  public void setSalt(String salt) {
+    this.salt = salt;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -86,42 +101,29 @@ public class Profile {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-
     Profile profile = (Profile) o;
-
-    if (!pid.equals(profile.pid)) {
-      return false;
-    }
-    if (!firstName.equals(profile.firstName)) {
-      return false;
-    }
-    if (!lastName.equals(profile.lastName)) {
-      return false;
-    }
-    if (!email.equals(profile.email)) {
-      return false;
-    }
-    if (!password.equals(profile.password)) {
-      return false;
-    }
-    return balance.equals(profile.balance);
+    return Objects.equals(pid, profile.pid) && Objects.equals(firstName, profile.firstName)
+        && Objects.equals(lastName, profile.lastName) && Objects.equals(email, profile.email)
+        && Objects.equals(password, profile.password) && Objects.equals(salt, profile.salt)
+        && Objects.equals(balance, profile.balance);
   }
 
   @Override
   public int hashCode() {
-    int result = pid.hashCode();
-    result = 31 * result + firstName.hashCode();
-    result = 31 * result + lastName.hashCode();
-    result = 31 * result + email.hashCode();
-    result = 31 * result + password.hashCode();
-    result = 31 * result + balance.hashCode();
-    return result;
+    return Objects.hash(pid, firstName, lastName, email, password, salt, balance);
   }
 
   @Override
   public String toString() {
-    return "Profile: { pid=" + this.pid + ",firstName=" + this.firstName + ",lastName=" + this.lastName + ",email="
-        + this.email + ",password=" + this.password + ",balance=" + this.balance + " }";
+    return new StringJoiner(", ", Profile.class.getSimpleName() + "[", "]")
+        .add("pid='" + pid + "'")
+        .add("firstName='" + firstName + "'")
+        .add("lastName='" + lastName + "'")
+        .add("email='" + email + "'")
+        .add("password='" + password + "'")
+        .add("salt='" + salt + "'")
+        .add("balance=" + balance)
+        .toString();
   }
 
 }
